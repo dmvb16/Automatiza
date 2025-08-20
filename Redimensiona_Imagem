@@ -1,0 +1,96 @@
+from PIL import Image
+import tkinter as tk
+from tkinter import filedialog, messagebox
+import os
+
+DPI = 300
+
+def get_custom_dimensions():
+    def submit():
+        try:
+            width_cm = float(width_entry.get())
+            height_cm = float(height_entry.get())
+            if width_cm <= 0 or height_cm <= 0:
+                messagebox.showerror("Erro", "As dimensões devem ser maiores que zero.")
+                return
+            dimensions[0] = width_cm, height_cm
+            root.destroy()
+        except ValueError:
+            messagebox.showerror("Erro", "Por favor, insira valores numéricos válidos.")
+    
+    root = tk.Tk()
+    root.title("Definir Dimensões")
+    root.geometry("300x150")
+    
+    tk.Label(root, text="Largura (cm):").pack(pady=5)
+    width_entry = tk.Entry(root)
+    width_entry.pack()
+    
+    tk.Label(root, text="Altura (cm):").pack(pady=5)
+    height_entry = tk.Entry(root)
+    height_entry.pack()
+    
+    tk.Button(root, text="Confirmar", command=submit).pack(pady=10)
+    
+    dimensions = [None]
+    root.mainloop()
+    return dimensions[0]
+
+def select_and_resize_images():
+    dimensions = get_custom_dimensions()
+    if dimensions is None:
+        print("Nenhuma dimensão fornecida. Encerrando.")
+        return
+    width_cm, height_cm = dimensions
+    
+    TARGET_WIDTH = int(width_cm * DPI)
+    TARGET_HEIGHT = int(height_cm * DPI)
+    
+    root = tk.Tk()
+    root.withdraw()
+    file_paths = filedialog.askopenfilenames(
+        title="Selecione as imagens",
+        filetypes=[("Arquivos de imagem", "*.jpg *.jpeg *.png *.bmp *.tiff")]
+    )
+    
+    if not file_paths:
+        print("Nenhuma imagem selecionada.")
+        return
+    
+    output_dir = "imagens_redimensionadas"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    for file_path in file_paths:
+        try:
+            img = Image.open(file_path)
+            
+            img_ratio = img.width / img.height
+            target_ratio = TARGET_WIDTH / TARGET_HEIGHT
+            
+            if img_ratio > target_ratio:
+                new_height = TARGET_HEIGHT
+                new_width = int(new_height * img_ratio)
+                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                left = (new_width - TARGET_WIDTH) // 2
+                img = img.crop((left, 0, left + TARGET_WIDTH, TARGET_HEIGHT))
+            else:
+                new_width = TARGET_WIDTH
+                new_height = int(new_width / img_ratio)
+                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                top = (new_height - TARGET_HEIGHT) // 2
+                img = img.crop((0, top, TARGET_WIDTH, top + TARGET_HEIGHT))
+            
+            img.info["dpi"] = (DPI, DPI)
+            
+            output_path = os.path.join(output_dir, f"{os.path.basename(file_path)}")
+            img.save(output_path, quality=95, dpi=(DPI, DPI))
+            print(f"Imagem salva: {output_path}")
+        
+        except Exception as e:
+            print(f"Erro ao processar {file_path}: {e}")
+    
+    print("Processamento concluído!")
+
+if __name__ == "__main__":
+    select_and_resize_images()
