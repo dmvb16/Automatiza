@@ -1,0 +1,11 @@
+import os
+
+appdata = os.getenv('APPDATA')
+diretorio_revit = os.path.join(appdata, 'Autodesk', 'Revit')
+
+for root, dirs, files in os.walk(diretorio_revit):
+    if 'RevitUILayout.xml' in files:
+        old_path = os.path.join(root, 'RevitUILayout.xml')
+        new_path = os.path.join(root, 'RevitUILayout_old.xml')
+        os.rename(old_path, new_path)
+print("Interface do usuário restaurada. Reinicie o Revit.")
