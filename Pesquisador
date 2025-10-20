@@ -1,0 +1,8 @@
+pesquisador/
+│
+├── bem.py          ← código principal
+├── requirements.txt           ← dependências do projeto
+├── README.md                  ← documentação explicativa
+├── LICENSE                    ← licença (MIT recomendada)
+├── icon.ico                   ← opcional (ícone do .exe)
+└── build_exe.bat              ← script para gerar o executável
